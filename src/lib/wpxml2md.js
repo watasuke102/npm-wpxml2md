@@ -168,7 +168,7 @@ const replaceLinkURL = (markdown, oldPrefix, newPrefix) => {
  * @param {CLIOptions} options Options.
  * @return {Promise} Promise task.
  */
-const convertPost = async (post, metadata, rootDir, logger, options) => {
+const convertPost = async (post, metadata, rootDir, logger, options, count) => {
   logger.log(`${metadata.year}/${metadata.month}/${metadata.day} ['${metadata.type}']: ${metadata.title}`)
 
   const dir = createSaveDir(rootDir, metadata.year, metadata.month)
@@ -177,7 +177,7 @@ const convertPost = async (post, metadata, rootDir, logger, options) => {
   }
 
   // If there are multiple articles on the same day, their names will be duplicated and made unique.
-  const filePath = Util.uniquePathWithSequentialNumber(Path.join(dir, `${metadata.day}.md`))
+  const filePath = Util.uniquePathWithSequentialNumber(Path.join(dir, `${metadata.day}-${count}.md`))
   const stream = Fs.createWriteStream(filePath)
   if (!(stream)) {
     throw new Error('Failed to create the stream.')
@@ -277,9 +277,11 @@ const WordPressXmlToMarkdown = async (src, dest, options = { report: false }) =>
   }
 
   const posts = await postsFromXML(src)
+  let i = 0;
   for (let post of posts) {
     const m = readMetadata(post)
-    await convertPost(post, m, m.type === 'post' ? postsDir : pagesDir, logger, options)
+    await convertPost(post, m, m.type === 'post' ? postsDir : pagesDir, logger, options, i)
+    i++
   }
 }
 
